@@ -6,12 +6,30 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+var (
+	fileName    = "./sessions.txt"
+	lockfile    sync.Mutex
+	sessionTime = 30
+)
+
+func init() {
+	x, err := strconv.Atoi(os.Getenv("Session_Time"))
+	if err == nil {
+		sessionTime = x
+	}
+	var path = os.Getenv("Session_File")
+	if len(path) != 0 {
+		fileName = path
+	}
+}
 
 type Session struct {
 	User   string
@@ -23,7 +41,7 @@ func GenerateCookie() http.Cookie {
 		Name:     "session",
 		Value:    uuid.NewString(),
 		Path:     "/",
-		Expires:  time.Now().Add(time.Duration(1) * time.Minute),
+		Expires:  time.Now().Add(time.Duration(sessionTime) * time.Minute),
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	}
@@ -35,12 +53,7 @@ func NewSession(user string) *Session {
 }
 
 type SessionsManager struct {
-	//Sessions []*Session
 }
-
-const fileName = "./sessions.txt"
-
-var lockfile sync.Mutex
 
 func SearchSession(readChannel chan *Session, user string) {
 	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0600)
