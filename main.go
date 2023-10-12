@@ -43,7 +43,9 @@ func GenerateCookie() http.Cookie {
 		Path:     "/",
 		Expires:  time.Now().Add(time.Duration(sessionTime) * time.Minute),
 		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteStrictMode,
+		HttpOnly: true,
+		MaxAge:   sessionTime * 3600,
 	}
 }
 
